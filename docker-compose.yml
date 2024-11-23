@@ -1,0 +1,21 @@
+version: "3.9"
+services:
+  locale-parser:
+    build: .
+    ports:
+      - "8083:8083"
+    environment:
+      - GOOGLE_CREDENTIALS_JSON=${GOOGLE_CREDENTIALS_JSON}
+      - SPREADSHEET_ID=${SPREADSHEET_ID}
+      - RU_READ_RANGE=${RU_READ_RANGE}
+      - ENG_READ_RANGE=${ENG_READ_RANGE}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=redis_passwd
+      - REDIS_DB=0
+    networks:
+      - lagom_bot_redis_network
+
+networks:
+  lagom_bot_redis_network:
+    driver: bridge
