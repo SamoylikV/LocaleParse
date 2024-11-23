@@ -26,9 +26,9 @@ func LoadConfig() (*Config, error) {
 		SpreadsheetID:         os.Getenv("SPREADSHEET_ID"),
 		RuReadRange:           os.Getenv("RU_READ_RANGE"),
 		EngReadRange:          os.Getenv("ENG_READ_RANGE"),
-		RedisAddr:             os.Getenv("REDDIS_ADDRESS"),
-		RedisPassword:         os.Getenv("REDDIS_PASSWORD"),
-		RedisDB:               os.Getenv("REDDIS_DB"),
+		RedisAddr:             fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
+		RedisPassword:         os.Getenv("REDIS_PASSWORD"),
+		RedisDB:               os.Getenv("REDIS_DB"),
 	}
 	if cfg.GoogleCredentialsJSON == "" || cfg.SpreadsheetID == "" || cfg.RuReadRange == "" || cfg.EngReadRange == "" || cfg.RedisAddr == "" || cfg.RedisPassword == "" || cfg.RedisDB == "" {
 		return nil, fmt.Errorf("incomplete config: ensure all variables are set")

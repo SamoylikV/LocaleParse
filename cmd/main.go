@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/SamoylikV/LocaleParse/internal/config"
-	"github.com/SamoylikV/LocaleParse/internal/google"
+	"github.com/SamoylikV/LocaleParse/internal/redis"
+	"github.com/SamoylikV/LocaleParse/internal/updater"
 	"log"
-	"sync"
+	"net/http"
+	"time"
 )
 
 func main() {
@@ -13,27 +14,29 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var wg sync.WaitGroup
-	var dataRu map[string]string
-	var dataEng map[string]string
-	var errRu error
-	var errEng error
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		dataRu, errRu = google.Parse(cfg, cfg.RuReadRange)
-	}()
-	go func() {
-		defer wg.Done()
-		dataEng, errEng = google.Parse(cfg, cfg.EngReadRange)
-	}()
-	wg.Wait()
-	if errRu != nil {
-		log.Fatal(errRu)
+
+	redisClient, err := redis.NewClient(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis client: %v", err)
 	}
-	if errEng != nil {
-		log.Fatal(errEng)
+
+	localeUpdater := updater.NewUpdater(redisClient, cfg)
+
+	localeUpdater.StartAutoUpdate(24 * time.Hour)
+
+	http.HandleFunc("/update", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Received manual update request")
+		if err := localeUpdater.UpdateLocales(); err != nil {
+			log.Printf("Manual update failed: %v", err)
+			http.Error(w, "Failed to update locales", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Locales updated successfully"))
+	})
+
+	log.Println("Starting server on :8083")
+	if err := http.ListenAndServe(":8083", nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
-	fmt.Println("Russian Data:", dataRu)
-	fmt.Println("English Data:", dataEng)
 }
