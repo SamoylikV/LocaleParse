@@ -14,8 +14,8 @@ services:
       - REDIS_PASSWORD=redis_passwd
       - REDIS_DB=0
     networks:
-      - lagom_bot_redis_network
+      - bot-network
 
 networks:
-  lagom_bot_redis_network:
-    driver: bridge
+  bot-network:
+    external: true
